@@ -41,7 +41,7 @@
 		    display: block;
 		}
     
-    #recent-palette {
+    #recent-palette{
       width: 300px;
 			background-color: #f1f1f1;
 			display: flex;
@@ -51,11 +51,15 @@
     }
     
     #eraser {
-			width: 300px;
+      width: 300px;
+			background-color: #f1f1f1;
+			display: flex;
+			flex-wrap: wrap;
 			position: absolute;
 			float: left;
       top: 50%;
-		}
+		} 
+    
 	</style>
 
 	<script type="text/javascript" canvas="canvas">
@@ -71,15 +75,11 @@
 
 			// color palette
 			var cp = {
-				history: ["#ffffff"], // white selected by default
+				history: ["#000000"], // black selected by default
 				options: [],
 				$container: $('#color-palette'),
         recent: []
 			}
-      
-      var eraser = {
-        history: ["#ffffff"],
-      }
 
 			// your rectangle gradient interaction goes in this function
 			// you may also add code outside of the function (e.g., global variables)
@@ -124,10 +124,18 @@
 				    if (hit) {
 				        hit.item.fillColor = cp.history[cp.history.length - 1];
                 createRecentPalette(cp.history[cp.history.length - 1]);
+                createEraserPalette();
 				    }
 				}
 			}
 
+      function createEraserPalette(){
+        var $swatch = $("<div>").css("background-color", "white").addClass("swatch");
+        $swatch.click(function(){
+          cp.history.push($(this).css("background-color"));
+        });   
+      }
+      
       // create a color palette for recently used colors
       function createRecentPalette(color){
         var $swatch = $("<div>").css("background-color", color).addClass("swatch");
@@ -136,14 +144,11 @@
         });
         
         // this array membership checking doesnt work.
-        console.log(cp.recent);
-        console.log(color);
-        if (cp.recent.includes(color){
+        if (cp.recent.includes(color)){
           return;
         } else {
           $("#recent-palette").append($swatch);
         }
-        
       }
 
 			// create a color palette with the given colors
@@ -172,27 +177,6 @@
 					createColorPalette(cp.options);
 				});
 			}
-      
-      let $Eraser = $("#eraser");
-      
-      function eraser() {
-        $Eraser.on('click', () => {
-          var hit = mandala.item.hitTest(event.point, { tolerance: 10, fill: true });
-				  if (hit) {
-				     hit.item.fillColor = 'white';
-          }
-        })
-        
-        var $swatch = $("<div>").css("background-color", "#ffffff")
-									   .addClass("swatch");
-					$swatch.click(function(){
-						// add color to the color palette history
-					  	cp.history.push($(this).css("background-color"));
-					});
-					cp.$container.append($swatch);
-      }
-    
-    
 
 			function init(custom){
 				paper.setup(canvas);
@@ -201,14 +185,13 @@
 				paper.project.importSVG(mandala.filePath, function(item) { 
 					mandala.item = item._children["design-freepik"];
 				    paper.project.insertLayer(0,mandala.item);
-
 				    if (custom) {
 				    	myCustomInteraction();
-              eraser();
+              createEraserPalette();
+              
 				    } else {
 				    	myGradientInteraction();
 				    }		
-					
 				}); 
 			}
 
@@ -228,20 +211,10 @@
 <body>	
 
 	<canvas id="myCanvas" width="750px" height="750px"></canvas>
-  
-  <div id="eraser">
-    <button>
-      <img src="https://www.shareicon.net/download/2017/02/15/878872_pencil.ico" style="height:100px; width:100px;" onclick="eraser()">
-    </button>
-    
-  </div>
-  
-  
 	<div id="color-palette"></div>
-  
-  <button value="Refresh Page" onClick="window.location.reload();" style="height:35px; width: 75px;"> Start Over! </button>
-  
-  <div id="recent-palette">
-  </div>
+  <div id="eraser"> </div>
+  <button value="Refresh Page" onClick="window.location.reload();" style="height:35px; width: 75px; float:right;"> Start Over! </button>
+  <div id="recent-palette"></div>
+
 </body>
 </html>
