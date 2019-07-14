@@ -18,6 +18,7 @@
 			position: absolute;
 			top: 0;
 		}
+
 		.swatch {
 			width: 24px;
 			height: 24px;
@@ -26,6 +27,12 @@
 			border-radius: 12px;
 			margin: 3px;
 		}
+    
+    .swatch:hover{
+      border-style: solid;
+      border-width: 2px;
+    }
+
 		#myCanvas {
 			padding-left: 0;
 		    padding-right: 0;
@@ -33,62 +40,115 @@
 		    margin-right: auto;
 		    display: block;
 		}
+    
+    #recent-palette {
+      width: 300px;
+			background-color: #f1f1f1;
+			display: flex;
+			flex-wrap: wrap;
+			position: absolute;
+			bottom: 0;
+    }
+    
+    #eraser {
+			width: 300px;
+			position: absolute;
+			float: left;
+      top: 50%;
+		}
 	</style>
 
 	<script type="text/javascript" canvas="canvas">
 		window.onload = function() {
 			var canvas = document.getElementById('myCanvas');
+
 			// coloring page
 			var mandala = {
 				item: null,
 				lastClicked: null,
 				filePath: '/static/coloring/images/mandala-freepik.svg'
 			};	
+
 			// color palette
 			var cp = {
-				history: ["#000000"], // black selected by default
+				history: ["#ffffff"], // white selected by default
 				options: [],
-				$container: $('#color-palette')
+				$container: $('#color-palette'),
+        recent: []
 			}
+      
+      var eraser = {
+        history: ["#ffffff"],
+      }
+
 			// your rectangle gradient interaction goes in this function
 			// you may also add code outside of the function (e.g., global variables)
 			function myGradientInteraction(){
 				var tool = new paper.Tool();
+
+				let path = new paper.Path();
         
-        var point = new paper.Point(50, 50);
-        var size = new paper.Size(400, 200);
-       
-        var rect = new paper.Path.Rectangle(point, size);
-        rect.fillColor = 'red';
-       
-        var begin;
-				tool.onMouseDown = function (event) {
-          begin = event.point;
-				}
-				
-        tool.onMouseUp = function (event) {
-          rect.fillColor = {
+        path.add(new paper.Point(200, 300));
+        path.add(new paper.Point(500, 300));
+        path.add(new paper.Point(500, 500));
+        path.add(new paper.Point(200, 500));
+        
+        path.closed = true;
+        
+        path.fillColor = 'red';
+        path.strokeWidth = 5;
+        
+				tool.onMouseUp = function (event) {
+					
+          let start = cp.history[cp.history.length - 2];
+          let finish = cp.history[cp.history.length - 1];
+          
+          path.fillColor = {
             gradient: {
-              stops: [cp.history[cp.history.length - 1], cp.history[cp.history.length - 2]]
+              stops: [start, finish]
             },
-            origin: begin,
-            destination: event.point
-          }
-        }
+            origin: event.downPoint,
+            destination: event.point,
+          };
+          
+				};
 			}
+
 			// your custom interaction goes here!
 			// you may replace everything
 			function myCustomInteraction() {
 				var tool = new paper.Tool();
+
 				tool.onMouseDown = function (event) {
 				    var hit = mandala.item.hitTest(event.point, { tolerance: 10, fill: true });
 				    if (hit) {
 				        hit.item.fillColor = cp.history[cp.history.length - 1];
+                createRecentPalette(cp.history[cp.history.length - 1]);
 				    }
 				}
 			}
+
+      // create a color palette for recently used colors
+      function createRecentPalette(color){
+        var $swatch = $("<div>").css("background-color", color).addClass("swatch");
+        $swatch.click(function(){
+          cp.history.push($(this).css("background-color"));
+        });
+        
+        // this array membership checking doesnt work.
+        console.log(cp.recent);
+        console.log(color);
+        if (cp.recent.includes(color){
+          return;
+        } else {
+          $("#recent-palette").append($swatch);
+        }
+        
+      }
+
 			// create a color palette with the given colors
 			function createColorPalette(colors){
+
 				// create a swatch for each color
 				for (var i = colors.length - 1; i >= 0; i--) {
 					var $swatch = $("<div>").css("background-color", colors[i])
@@ -100,6 +160,7 @@
 					cp.$container.append($swatch);
 				}
 			}
+
 			// loads a set of colors from a json to create a color palette
 			function getColorsCreatePalette(){
 				cp.$container.html(" ");
@@ -111,20 +172,46 @@
 					createColorPalette(cp.options);
 				});
 			}
+      
+      let $Eraser = $("#eraser");
+      
+      function eraser() {
+        $Eraser.on('click', () => {
+          var hit = mandala.item.hitTest(event.point, { tolerance: 10, fill: true });
+				  if (hit) {
+				     hit.item.fillColor = 'white';
+          }
+        })
+        
+        var $swatch = $("<div>").css("background-color", "#ffffff")
+									   .addClass("swatch");
+					$swatch.click(function(){
+						// add color to the color palette history
+					  	cp.history.push($(this).css("background-color"));
+					});
+					cp.$container.append($swatch);
+      }
+    
+    
+
 			function init(custom){
 				paper.setup(canvas);
 				getColorsCreatePalette();
+
 				paper.project.importSVG(mandala.filePath, function(item) { 
 					mandala.item = item._children["design-freepik"];
 				    paper.project.insertLayer(0,mandala.item);
+
 				    if (custom) {
-				    	myCustomInteraction();	
+				    	myCustomInteraction();
+              eraser();
 				    } else {
 				    	myGradientInteraction();
 				    }		
 					
 				}); 
 			}
+
 			// To see your myGradientInteraction version visit: 
 			// http://<your url>:8000/coloring/?type=gradient
 			// To see your myCustomInteraction version visit: 
@@ -141,6 +228,20 @@
 <body>	
 
 	<canvas id="myCanvas" width="750px" height="750px"></canvas>
+  
+  <div id="eraser">
+    <button>
+      <img src="https://www.shareicon.net/download/2017/02/15/878872_pencil.ico" style="height:100px; width:100px;" onclick="eraser()">
+    </button>
+    
+  </div>
+  
+  
 	<div id="color-palette"></div>
+  
+  <button value="Refresh Page" onClick="window.location.reload();" style="height:35px; width: 75px;"> Start Over! </button>
+  
+  <div id="recent-palette">
+  </div>
 </body>
 </html>
