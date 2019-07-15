@@ -41,7 +41,7 @@
 		    display: block;
 		}
     
-    #recent-palette{
+    #recent-palette {
       width: 300px;
 			background-color: #f1f1f1;
 			display: flex;
@@ -51,13 +51,13 @@
     }
     
     #eraser {
-      width: 300px;
-			background-color: #f1f1f1;
+      width: 40px;
+			background-color: #ff69b4;
 			display: flex;
 			flex-wrap: wrap;
 			position: absolute;
 			float: left;
-      top: 50%;
+      top: 30%;
 		} 
     
 	</style>
@@ -120,11 +120,12 @@
 				var tool = new paper.Tool();
 
 				tool.onMouseDown = function (event) {
+            
 				    var hit = mandala.item.hitTest(event.point, { tolerance: 10, fill: true });
 				    if (hit) {
 				        hit.item.fillColor = cp.history[cp.history.length - 1];
                 createRecentPalette(cp.history[cp.history.length - 1]);
-                createEraserPalette();
+                
 				    }
 				}
 			}
@@ -133,7 +134,8 @@
         var $swatch = $("<div>").css("background-color", "white").addClass("swatch");
         $swatch.click(function(){
           cp.history.push($(this).css("background-color"));
-        });   
+        }); 
+        $("#eraser").append($swatch);
       }
       
       // create a color palette for recently used colors
@@ -181,14 +183,13 @@
 			function init(custom){
 				paper.setup(canvas);
 				getColorsCreatePalette();
-
+        createEraserPalette();
+        //eraser
 				paper.project.importSVG(mandala.filePath, function(item) { 
 					mandala.item = item._children["design-freepik"];
 				    paper.project.insertLayer(0,mandala.item);
 				    if (custom) {
-				    	myCustomInteraction();
-              createEraserPalette();
-              
+				    	myCustomInteraction();              
 				    } else {
 				    	myGradientInteraction();
 				    }		
@@ -212,8 +213,8 @@
 
 	<canvas id="myCanvas" width="750px" height="750px"></canvas>
 	<div id="color-palette"></div>
-  <div id="eraser"> </div>
-  <button value="Refresh Page" onClick="window.location.reload();" style="height:35px; width: 75px; float:right;"> Start Over! </button>
+  <div id="eraser"> Eraser </div>
+  <button value="Refresh Page" onClick="window.location.reload();" style="height:35px; width: 75px; float: right"> Start Over! </button>
   <div id="recent-palette"></div>
 
 </body>
